@@ -1,81 +1,15 @@
 import sys
 from typing import List, Optional
-from enum import Enum
 
-class TokenType(Enum):
-    # Single-character tokens.
-    LEFT_PAREN = 1
-    RIGHT_PAREN = 2
-    LEFT_BRACE = 3
-    RIGHT_BRACE = 4
-    COMMA = 5
-    DOT = 6
-    MINUS = 7
-    PLUS = 8
-    SEMICOLON = 9
-    SLASH = 10
-    STAR = 11
-
-    # One or two character tokens.
-    BANG = 12
-    BANG_EQUAL = 13
-    EQUAL = 14
-    EQUAL_EQUAL = 15
-    GREATER = 16
-    GREATER_EQUAL = 17
-    LESS = 18 
-    LESS_EQUAL = 19
-
-    # Literals.
-    IDENTIFIER = 20
-    STRING = 21
-    NUMBER = 22
-
-    # Keywords.
-    AND = 23 
-    CLASS = 24
-    ELSE = 25
-    FALSE = 26 
-    FUN = 27 
-    FOR = 28
-    IF = 29 
-    NIL = 30
-    OR = 31
-    PRINT = 32
-    RETURN = 33
-    SUPER = 34
-    THIS = 35
-    TRUE = 36
-    VAR = 37
-    WHILE = 38
-
-    EOF = 39
-
-
-class Token:
-    type: TokenType
-    lexeme: str
-    literal: object
-    line: int
-
-    def __init__(self, type: TokenType, lexeme: str, literal: Optional[object], line: int) -> None:
-        self.type = type
-        self.lexeme = lexeme
-        self.literal = literal
-        self.line = line
-
-    def __str__(self) -> str:
-        return f"<{self.type:21}, {self.lexeme}, {self.literal}>"
-
-    def __repr__(self) -> str:
-        return str(self)
+from .token import Token
+from .token_type import TokenType
 
 
 class Scanner:
     __tokens: List[Token] = list()
-    __start = 0
-    __current = 0
-    __line = 0
+    start = 0
+    current = -1
+    __line = 1
     __keywords = {
         "and": TokenType.AND,
         "class": TokenType.CLASS,
@@ -100,8 +34,8 @@ class Scanner:
 
     def scan_tokens(self) -> List[Token]:
         while not self.__is_at_end:
-            # 
-            self.__start = self.__current
+            if self.current != -1:
+                self.start = self.current
             self.__scan_token()
 
         self.__tokens.append(Token(TokenType.EOF, "", None, self.__line))
@@ -126,13 +60,17 @@ class Scanner:
         elif c == "+":
             self.__add_token(TokenType.PLUS)
         elif c == ";":
-            self.__add_token(TokenType.SEMICOLON)
+            self.__add_token_object(TokenType.SEMICOLON, text=self.source[self.start+1: self.current+1])
+            # self.__add_token(TokenType.SEMICOLON)
         elif c == "*":
             self.__add_token(TokenType.STAR)
         elif c == "!":
             self.__add_token(TokenType.BANG_EQUAL if self.__match("=") else TokenType.BANG)
         elif c == "=":
-            self.__add_token(TokenType.EQUAL_EQUAL if self.__match("=") else TokenType.EQUAL)
+            self.__add_token_object(
+                TokenType.EQUAL_EQUAL if self.__match("=") else TokenType.EQUAL,
+                text=self.source[self.start+1: self.current+1]
+            )
         elif c == "<":
             self.__add_token(TokenType.LESS_EQUAL if self.__match("=") else TokenType.LESS)
         elif c == ">":
@@ -144,7 +82,7 @@ class Scanner:
             else:
                 self.__add_token(TokenType.SLASH)
         elif c in (" ", "\r", "\t"):
-            pass
+            return
         elif c == "\n":
             self.__line += 1
         elif c == "\"":
@@ -163,9 +101,9 @@ class Scanner:
         return ("a" <= c <= "z") or ("A" <= c <= "Z") or (c == "_")
     
     def __identifier(self):
-        while self.__is_alpha_numeric(self.__peek()):
+        while self.__is_alpha_numeric(self.__peek_next()):
             self.__advance()
-        text = self.source[self.__start: self.__current]
+        text = self.source[self.start: self.current+1]
         type = self.__keywords.get(text, TokenType.IDENTIFIER)
 
         self.__add_token(type)
@@ -183,61 +121,65 @@ class Scanner:
         if self.__peek() == "." and self.__is_digit(self.__peek_next()):
             self.__advance()
 
-            while self.__is_digit(self.__peek()):
+            while self.__is_digit(self.__peek_next()):
                 self.__advance()
 
-        self.__add_token_object(TokenType.NUMBER, float(self.source[self.__start: self.__current]))
+        self.__add_token_object(TokenType.NUMBER, float(self.source[self.start: self.current+1]))
 
     def __peek_next(self):
-        if (self.__current + 1 >= len(self.source)):
+        if (self.current + 1 >= len(self.source)):
             return "\0"
-        return self.source[self.__current + 1]
+        return self.source[self.current + 1]
 
     def __string(self):
+        self.__advance()
         while self.__peek() != "\""  and not self.__is_at_end:
             if self.__peek() == "\n":
                 self.__line += 1
-                self.__advance()
+            self.__advance()
+
         if self.__is_at_end:
             Veda.error(self.__line, "Unterminated string.")
             return
 
+        # The closing ".
         self.__advance()
 
-        value = self.source[self.__start + 1: self.__current - 1]
+        value = self.source[self.start + 1: self.current - 1]
         self.__add_token_object(TokenType.STRING, value)
 
     def __peek(self):
         if self.__is_at_end:
             return "\0"
 
-        return self.source[self.__current]
+        return self.source[self.current]
 
     def __match(self, expected: str):
         if self.__is_at_end:
             return False
-        if self.source[self.__current] != expected:
+        if self.source[self.current+1] != expected:
             return False
-        self.__current += 1
+        self.current += 1
         return True
 
     def __advance(self) -> str:
-        self.__current += 1
-        if self.__is_at_end:
+        if self.current+1 >= len(self.source):
             return "\0"
-        return self.source[self.__current]
+        self.current += 1
+        return self.source[self.current]
 
     def __add_token(self, token: TokenType):
         self.__add_token_object(token)
 
-    def __add_token_object(self, type: TokenType, literal: Optional[object]=None):
-        text = self.source[self.__start: self.__current]
+    def __add_token_object(self, type: TokenType, literal: Optional[object]=None, text: Optional[str] = None):
+        if not text:
+            text = self.source[self.start: self.current+1]
         self.__tokens.append(Token(type, text, literal, self.__line))
 
 
     @property
     def __is_at_end(self):
-        return self.__current >= len(self.source)
+        return self.current + 1 >= len(self.source)
         
 
 
@@ -294,5 +236,6 @@ veda >= 4.8;
 (veda >= 4.8) and (veda < 8.9);
 """
 if __name__ == "__main__":
-    tokens = Scanner(source).scan_tokens()
-    print("\n".join([str(t) for t in tokens]))
+    # tokens = Scanner(source).scan_tokens()
+    # print("\n".join([str(t) for t in tokens]))
+    Veda().main("main.v")

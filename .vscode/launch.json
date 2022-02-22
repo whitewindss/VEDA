@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: 当前文件",
+            "name": "run veda",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "demo.py",
             "console": "integratedTerminal"
         }
     ]
