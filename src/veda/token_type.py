@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class TokenType(Enum):
     # Single-character tokens.
     LEFT_PAREN = 1
@@ -21,7 +22,7 @@ class TokenType(Enum):
     EQUAL_EQUAL = 15
     GREATER = 16
     GREATER_EQUAL = 17
-    LESS = 18 
+    LESS = 18
     LESS_EQUAL = 19
 
     # Literals.
@@ -30,13 +31,13 @@ class TokenType(Enum):
     NUMBER = 22
 
     # Keywords.
-    AND = 23 
+    AND = 23
     CLASS = 24
     ELSE = 25
-    FALSE = 26 
-    FUN = 27 
+    FALSE = 26
+    FUN = 27
     FOR = 28
-    IF = 29 
+    IF = 29
     NIL = 30
     OR = 31
     PRINT = 32
@@ -48,4 +49,3 @@ class TokenType(Enum):
     WHILE = 38
 
     EOF = 39
-

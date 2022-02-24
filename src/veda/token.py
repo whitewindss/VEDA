@@ -1,5 +1,7 @@
 from typing import Optional
+
 from .token_type import TokenType
+
 
 class Token:
     type: TokenType
@@ -18,4 +20,3 @@ class Token:
 
     def __repr__(self) -> str:
         return str(self)
-
