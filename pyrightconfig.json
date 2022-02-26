@@ -1,0 +1,31 @@
+{
+    "include": [
+      "src/veda",
+      "tests",
+    ],
+    "ignore": [
+      "venv",
+      "stubs",
+    ],
+    "stubPath": "stubs",
+    "strictListInference": true,
+    "strictDictionaryInference": true,
+    "reportTypeshedErrors": "none",
+    "reportMissingImports": "error",
+    "reportMissingModuleSource": "none",
+    "reportImplicitStringConcatenation": "error",
+    "reportIncompatibleMethodOverride": "error",
+    "reportCallInDefaultInitializer": "error",
+    "reportInvalidStringEscapeSequence": "error",
+    "reportSelfClsParameterName": "warning",
+    "reportMissingTypeStubs": "warning",
+    "reportAssertAlwaysTrue": "warning",
+    "reportUnusedImport": "warning",
+    "reportUnusedVariable": "warning",
+    "reportUnusedFunction": "warning",
+    "reportUnusedClass": "warning",
+    "reportDuplicateImport": "warning",
+    "reportImportCycles": "none",
+    "pythonVersion": "3.10",
+    "pythonPlatform": "Linux"
+  }
